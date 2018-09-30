@@ -62,8 +62,8 @@ summary(humanCap) #check human
 # Material captial 1: occupation
 mCapname1=c("pid","fid","qg307isei","qg307siops","qg307egp") #material capitl - occupation
 mCap1 <- dfa[,mCapname1] #extractdata
-mCap1$qg307egp[mCap1$qg307egp<0]<-NA
-mCap1$qg307egp[mCap1$qg307egp>11]<-NA #replace none existed data
+mCap1$qg307egp[mCap1$qg307egp<0] <-NA
+mCap1$qg307egp[mCap1$qg307egp>11] <-NA #replace none existed data
 summary(mCap1) #check material1
 
 # Material captial 2: income

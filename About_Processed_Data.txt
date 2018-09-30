@@ -1,4 +1,18 @@
-This folder contains the cleaned and processed data files used to generate the results reported in the paper as well as descriptions of the datasets. If data processing is extensive and complex, this can be the most efficient way to enable data re-use by other researchers.Nevertheless, in order to ensure full analytic reproducibility, it is always important to provide raw data in addition to processed data if there are no negative constraints (e.g., identifiable information embedded in the raw data). In the example project (https://osf.io/xf6ug/), we provide the processed datasets in the native R Data format. A file containing a description of each dataset should also be included (see section on data documentation).
+This folder contains the cleaned and processed data files 
+used to generate the results reported in the paper 
+as well as descriptions of the datasets. 
+
+If data processing is extensive and complex, 
+this can be the most efficient way to enable data re-use by other researchers.
+Nevertheless, in order to ensure full analytic reproducibility, 
+it is always important to provide raw data in addition to processed data 
+if there are no negative constraints (e.g., identifiable information embedded in the raw data). 
+
+In the example project (https://osf.io/xf6ug/), 
+we provide the processed datasets in the native R Data format. 
+A file containing a description of each dataset should also be included 
+(see section on data documentation).
+
 sesandhealth.csv:data extracted from CFPS2010 about SES and health
 
 
