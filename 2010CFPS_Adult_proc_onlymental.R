@@ -43,7 +43,6 @@ data<-read.csv("sesMH.csv",header=T)     ## hcp: once you change to the right di
 summary(data)
 
 drop.cols <- 'pid' #  the column(s) need to be dropped for later analysis
-
 data.complete <- data %>%     
       filter(complete.cases(data)) %>%   # only the complete cases (i.e., no NA in every row) 
       select(-drop.cols)                 # drop the column(s)
