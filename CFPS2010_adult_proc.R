@@ -67,10 +67,12 @@ labels <- c("attri1", "attri2", "attri3", "attri4", "attri5", "attri6", "attri7"
 groups <- factor(c(rep("attri", 7), rep("fair", 8), 
                    rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
                    rep("deprMH", 6), rep("otherMH", 3)))
+
+# hcp: I have error message here, because here we have more labels than the data (19 columns)
 netPcor <- qgraph::qgraph(cor(data.complete), layout = "spring", 
                     labels = labels, groups = groups, graph = "concentration")
 # export image
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/all.jpeg")
+jpeg(file = "all.jpeg")
 plot(netPcor)
 dev.off()
 
