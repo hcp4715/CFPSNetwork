@@ -17,5 +17,8 @@ sesandhealth.csv:data extracted from CFPS2010 about SES and health
 
 
 Clean data process
-cleanSES&HEALTH: Clean data SES and health(part)
-SESandHEALTH.CSV: data exported after clean
+CFPS2010_adult_preproc 
+CFPS2010_child_preproc
+
+Data analysis
+CFPS2010_adult_proc
