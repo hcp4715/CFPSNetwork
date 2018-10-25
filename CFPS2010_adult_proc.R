@@ -47,7 +47,7 @@ library("dplyr")
 
 
 #set directory to the folder of analytic data
-data<-read.csv("sesMH.csv",header=T)     
+data <- read.csv("sesMH.csv", header=T)     
 
 summary(data)
 ##NOTICE: over 10000 missing values for occupation coding and 1865 for income, thousands missing for attributional style and fairness
@@ -60,15 +60,19 @@ labels <- c("educ", "word", "math", "occu1", "occu2", "income", "pol",
             "satis","confi", "happi", "depr", "fair", "attri1", "attri2", "attri3", "attri4", "attri5", "attri6", "attri7")
 ##NOTICE: data.complete has 9419 obs
 #generate partial correlation network of all the data
-
 groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
                    rep("MH", 4), rep("otherMH", 8)))
+
 netPcor <- qgraph::qgraph(cor(data.complete), layout = "spring", 
                           labels = labels, groups = groups, graph = "concentration")
+# export image
+jpeg(file = "all.jpeg")
+plot(netPcor)
+dev.off()
 
 # data without those variables that have too many missing values
 data.more <- data %>%
-  dplyr::select(depression, qm403, qm404, qk802, educ, wordtest, mathtest, qa7_s_1) %>%
+  dplyr::select(fdepression, qm403, qm404, qk802, educ, wordtest, mathtest, qa7_s_1) %>%
   dplyr::filter(complete.cases(data))
 summary(data.more)
 
@@ -88,22 +92,38 @@ groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1),
 netPcor_m <- qgraph(cor(data.male), layout = "spring", 
                     labels = labels, groups = groups, graph = "concentration")
 
+# export image
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Male.jpeg")
+plot(netPcor)
+dev.off()
+
 #LASSO-male
 set.seed(100)
 adls <- adalasso.net(data.male) 
 network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
-lasso_m <- qgraph(network, layout = "spring", labels = labels, groups = groups)
-
+lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
+# export image
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/male_lasso.jpeg")
+plot(lasso)
+dev.off()
 
 # Centrality
 centrality <- centrality_auto(netPcor)
 nc <- centrality$node.centrality
 ebc <- centrality$edge.betweenness.centrality
 central <- centralityPlot(netPcor)
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Male_central.jpeg")
+plot(central)
+dev.off()
 
 #cluster
 clustcoef <- clustcoef_auto(netPcor)
 cluster <- clusteringPlot(netPcor, signed = TRUE)
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Male_cluster.jpeg")
+plot(cluster)
+dev.off()
+
+
 
 # generate partial correlation network of female, 30-50
 data.female <- data %>%
@@ -120,18 +140,34 @@ groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1),
 netPcor <- qgraph(cor(data.female), layout = "spring", labels = labels,
                   groups = groups, graph = "concentration")
 
+#export image
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female.jpeg")
+plot(netPcor)
+dev.off()
+
 #LASSO-female
 set.seed(100)
 adls <- adalasso.net(data.female) 
 network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
 lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
 
+# export image
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female_lasso.jpeg")
+plot(lasso)
+dev.off()
+
 # Centrality
 centrality <- centrality_auto(netPcor)
 nc <- centrality$node.centrality
 ebc <- centrality$edge.betweenness.centrality
 central <- centralityPlot(netPcor)
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female_central.jpeg")
+plot(central)
+dev.off()
 
 #cluster
 clustcoef <- clustcoef_auto(netPcor)
 cluster <- clusteringPlot(netPcor, signed = TRUE)
+jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female_cluster.jpeg")
+plot(cluster)
+dev.off()
