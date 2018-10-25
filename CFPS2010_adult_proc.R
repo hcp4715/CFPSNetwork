@@ -92,38 +92,23 @@ groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1),
 netPcor_m <- qgraph(cor(data.male), layout = "spring", 
                     labels = labels, groups = groups, graph = "concentration")
 
-# export image
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Male.jpeg")
-plot(netPcor)
-dev.off()
-
 #LASSO-male
 set.seed(100)
 adls <- adalasso.net(data.male) 
 network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
 lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
-# export image
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/male_lasso.jpeg")
-plot(lasso)
-dev.off()
+
 
 # Centrality
 centrality <- centrality_auto(netPcor)
 nc <- centrality$node.centrality
 ebc <- centrality$edge.betweenness.centrality
 central <- centralityPlot(netPcor)
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Male_central.jpeg")
-plot(central)
-dev.off()
+
 
 #cluster
 clustcoef <- clustcoef_auto(netPcor)
 cluster <- clusteringPlot(netPcor, signed = TRUE)
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Male_cluster.jpeg")
-plot(cluster)
-dev.off()
-
-
 
 # generate partial correlation network of female, 30-50
 data.female <- data %>%
@@ -140,34 +125,18 @@ groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1),
 netPcor <- qgraph(cor(data.female), layout = "spring", labels = labels,
                   groups = groups, graph = "concentration")
 
-#export image
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female.jpeg")
-plot(netPcor)
-dev.off()
-
 #LASSO-female
 set.seed(100)
 adls <- adalasso.net(data.female) 
 network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
 lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
 
-# export image
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female_lasso.jpeg")
-plot(lasso)
-dev.off()
-
 # Centrality
 centrality <- centrality_auto(netPcor)
 nc <- centrality$node.centrality
 ebc <- centrality$edge.betweenness.centrality
 central <- centralityPlot(netPcor)
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female_central.jpeg")
-plot(central)
-dev.off()
 
 #cluster
 clustcoef <- clustcoef_auto(netPcor)
 cluster <- clusteringPlot(netPcor, signed = TRUE)
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/Female_cluster.jpeg")
-plot(cluster)
-dev.off()
