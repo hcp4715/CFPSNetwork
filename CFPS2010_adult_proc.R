@@ -63,12 +63,20 @@ labels <- c("educ", "word", "math", "occu1", "occu2", "income", "pol",
 ##NOTICE: data.complete has 9419 obs
 #generate partial correlation network of all the data
 
+<<<<<<< HEAD
 groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
                    rep("MH", 4), rep("otherMH", 8)))
+=======
+groups <- factor(c(rep("attri", 7), rep("fair", 8), 
+                   rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
+                   rep("deprMH", 6), rep("otherMH", 3)))
+
+# hcp: I have error message here, because here we have more labels than the data (19 columns)
+>>>>>>> 8c38396ccdc830835165fc1e2b2d17c163bd77bf
 netPcor <- qgraph::qgraph(cor(data.complete), layout = "spring", 
                           labels = labels, groups = groups, graph = "concentration")
 # export image
-jpeg(file = "/Users/apple/Desktop/CFPS/5_ProcessData/all.jpeg")
+jpeg(file = "all.jpeg")
 plot(netPcor)
 dev.off()
 

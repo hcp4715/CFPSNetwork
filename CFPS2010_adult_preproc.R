@@ -8,6 +8,7 @@
 # Cai, Y-Q    18-10-21         Add fairness and attributional styles
 # Hu, C-P     18-10-22         Review the code, change the absolute path to relative path, and other comments
 # Cai, Y-Q    18-10-24         Confirm the file and change some dimensions
+
 ###### input######
 # [CFPS Public Data] 2010 Adult Data (ENG).tab
 # [CFPS Public Data] 2010 Family Data (ENG).tab
@@ -18,6 +19,7 @@
 #
 #
 #
+
 ######################## Start of the script ###########################
 ### clean the memory to avoid unnecessary errors:
 rm(list = ls())
@@ -38,8 +40,8 @@ library("psych")
 library("dplyr")
 library("tidyverse")
 
-#read data
-dfa <- read.table("/Users/apple/Desktop/CFPS/4_Analysis/[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T)#adult 2010
+#read data #hcp: is it neccessary to include the directory here on Mac, even after using setwd()? 
+dfa <- read.table("[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T) #adult 2010
 
 ###### get related variables
 #ID information
@@ -59,6 +61,7 @@ SES <- dfa %>%
 SES[SES == -8] <- NA #missing values
 summary(SES) # check SES
 
+####### political captial #######
 # set qa7_s_1 = 1 if any family member is a communist party member, else = 0
 pCap <- SES %>%
   dplyr::select(qa7_s_1, fid) %>%
@@ -69,13 +72,15 @@ SES <- SES %>%
   dplyr::left_join(pCap, SES, by = "fid")
 SES$qa7_s_1[is.na(SES$qa7_s_1)] <- 0
 
-#delate repatitive rows
+# delate repatitive rows
 SES <- SES %>%
   dplyr::group_by(pid) %>%
   dplyr::filter(row_number() == 1) %>%
   dplyr::ungroup()
 
 # recode income using log10, if income =0, recode it as 0 
+# hcp: plot the raw data using hist() or density() to have a look first.
+# hcp: using a new column to store log-transferred data, 
 SES <- SES %>%
   dplyr::mutate(qk601 = log10(qk601)) %>%
   dplyr::mutate(qk601 = recode_factor(qk601, '-Inf' = 0 ))
@@ -85,8 +90,8 @@ SES <- SES %>%
 MH <- dfa %>%
   dplyr::select(qm403, qm404, qk802, depression)
 MH[MH == -8] <- NA
-MH$qm403[MH$qm403 <0] <- NA
-MH$qm404[MH$qm404 <0] <- NA
+MH$qm403[MH$qm403 <0] <- NA  # hcp: add comments
+MH$qm404[MH$qm404 <0] <- NA  # hcp: add comments
 summary(MH)
 
 # reliability of depression scale
@@ -99,9 +104,10 @@ summary(depr)
 psych::alpha(depr)
 depr <- depr %>%
   dplyr::filter(complete.cases(depr))
-#???
+
+# hcp: why doing factor analysis here? the scree plot showed that one factor structure
 stats::factanal(depr, factors=2) 
-scree(depr)
+scree(depr) # hcp: add the package information?
 
 ##fairness
 fair <- dfa %>%
@@ -141,10 +147,6 @@ attri  %>%
   # factor analysis?
   stats::factanal(attri, factors=2) 
 # reliability of fairness scale
-psych::alpha(attri)
-
-
-#reliability of attribute scale
 psych::alpha(attri)
 
 # combine all the related data
