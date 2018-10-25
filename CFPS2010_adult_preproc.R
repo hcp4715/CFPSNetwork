@@ -41,7 +41,7 @@ library("dplyr")
 library("tidyverse")
 
 #read data #hcp: is it neccessary to include the directory here on Mac, even after using setwd()? 
-dfa <- read.table("[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T) #adult 2010
+dfa <- read.table("/data/[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T) #adult 2010
 
 ###### get related variables
 #ID information
