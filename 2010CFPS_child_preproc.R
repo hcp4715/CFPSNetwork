@@ -37,35 +37,47 @@ library("dplyr")
 library("tidyverse")
 
 #read data
-dfc <- read.table("/Users/apple/Desktop/CFPS/4_Analysis/[CFPS Public Data] 2010 Child Data (ENG).tab", sep="\t",header=T)#adult 2010
+dfc <- read.table("data/[CFPS Public Data] 2010 Child Data (ENG).tab", sep="\t",header=T)#adult 2010
+dff <- read.table("data/[CFPS Public Data] 2010 Family Data (ENG).tab", sep="\t",header=T)#adult 2010
 summary(dfc == -8)
 
-#ID information
-##to distinguish child from adult, data and variable are coded as e.g.persinfoc
-persinfoc <- dfc %>%
-  dplyr::select(gender, wa1age, fid, pid, childgroup)
-summary(persinfoc)
-persinfoc[persinfoc == -8] <-NA
 ##NOTICE: childgroup = 1, age<1; 2, 1<=age<3; 3, 3<=age<6; 4, 6<=age<16
 #age:10-15
 child10_15 <- dfc %>%
-  dplyr::filter(wa1age >= 10) #select children older than 10(with both 自答 and 代答)
+  dplyr::filter(wa1age >= 10) #select children older than 10(with both answer themselves and parents answer for them)
+#ID information
+##to distinguish child from adult, data and variable are coded as e.g.persinfoc
+persinfoc <- child10_15 %>%
+  dplyr::select(gender, wa1age, fid, pid, childgroup, pid_f, pid_m)
+persinfoc[persinfoc == -8] <-NA
+summary(persinfoc)
 
 ##SES: human
 hCapc <- child10_15 %>%
-  dplyr::select(edu2010, wordtest, mathtest, wh9, wd2) # education level in 2010, wordtest, mathtest, education expactancy of child, education expactancy of child's parents
-hCapc$wh9[hCapc$wh9 == 9] <- 1 # education expectancy, 9=不必念书, 2-8=小学-博士
-hCapc[hCap < 0 ] <- NA
+  dplyr::select(edu2010, wordtest, mathtest, wh9, # education level in 2010, wordtest, mathtest, education expactancy of child, 
+                tb4_a_f, tb4_a_m, wd2, wd510) # highest education level of father, of mother, education expactancy of child's parents, investment in education
+hCapc$wh9[hCapc$wh9 == 9] <- 1 # education expectancy, 9=no need to study, 2-8=primary school-PhD
+hCapc[hCapc < 0 ] <- NA
 summary(hCapc)
 ##SES: material
-mCapc <- child10_15 %>%
-  dplyr::select(moccupisco, foccupisco) # mother occupation, father occupation, family income
-#INCOME?
+incomec <- dff %>%
+  select(ff601, ff701, fid) 
+incomec[incomec == -8] <- 0
+incomec <- incomec %>%
+  mutate(incomef = ff601 + ff701) %>% # calculate total income of the family
+  select(incomef, fid)
+occupc <- child10_15 %>%
+  dplyr::select(fid, moccupisco, foccupisco) # mother occupation, father occupation, family income
+mCapc <- left_join(occupc, incomec) # merge income and occupation
+
 ##SES: political
 pCapc <- child10_15 %>%
-  dplyr::select(mparty, fparty) %>%
+  dplyr::select(pid, mparty, fparty) %>%
   dplyr::mutate(mparty = recode(mparty, "1" = 1, .default = 0),
          fparty = recode(fparty, "1" = 1, .default = 0)) 
+pCapc <- pCapc %>%
+  dplyr::mutate(polc = fparty + mparty) %>%
+  dplyr::select(polc)
 
 #MH
 MHc <- child10_15 %>%
@@ -75,9 +87,9 @@ MHc[MHc < 0] <- NA
 summary(MHc)
 
 #reliability of depression
-depr <- child10_15 %>%
+deprc <- child10_15 %>%
   dplyr::select(wn401, wn402, wn403, wn404, wn405, wn406) 
-psych::alpha(depr)
+psych::alpha(deprc)
 
 #attribution
 attric <- child10_15 %>%
@@ -92,4 +104,7 @@ goalc <- child10_15 %>%
 goalc[goalc < 0] <- NA
 summary(goalc) #####NOTIC: many missing values
 
-##?father's pid and mother's pid--parents SES and child's happiness
+#merge all relevant variable together
+allc <- cbind(persinfoc, hCapc, mCapc, pCapc, MHc, attric, goalc)
+# write table
+write.csv(allc, file = "sesMHc.csv", row.names = FALSE)
