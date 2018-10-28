@@ -41,7 +41,7 @@ library("dplyr")
 library("tidyverse")
 
 #read data 
-dfa <- read.table("data/[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T) #adult 2010
+dfa <- read.table("[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T) #adult 2010
 
 ###### get related variables
 #ID information
@@ -50,9 +50,8 @@ persinfo <- dfa %>%
 
 #summarize personal informations
 summary(dfa$qa1age)  #age
-summary(dfa$gender)  #gender
-summary(dfa$qa2==1)  #hukou: agriculture
-summary(dfa$qa2==3)  #hukou: non-agriculture
+table(dfa$gender)    #gender: 0 =  ; 1 = .
+table(dfa$qa2)       #hukou: 1 = agriculture 3 = non-agriculture
 
 # Select and recode SES
 SES <- dfa %>%
