@@ -55,7 +55,7 @@ table(dfa$qa2)       #hukou: 1 = agriculture 3 = non-agriculture; other numbers 
 
 # Select and recode SES
 SES <- dfa %>%
-  dplyr::select(fid, pid, educ, wordtest, mathtest, qg307isco, qg307isei, qk601,qa7_s_1) %>%
+  dplyr::select(fid, pid, educ, wordtest, mathtest, qg307isco, qg307isei, qk601, qa7_s_1) %>%
   dplyr::mutate(qa7_s_1 = recode_factor(qa7_s_1, '1' = 1, .default = 0)) #leave only communist members
 SES[SES == -8] <- NA #missing values
 summary(SES) # check SES
@@ -81,7 +81,8 @@ SES <- SES %>%
 # hcp: plot the raw data using hist() or density() to have a look first. 
 SES <- SES %>%
   dplyr::mutate(income = log10(qk601)) %>%
-  dplyr::mutate(income = recode_factor(income, '-Inf' = 0 ))
+  dplyr::mutate(income = recode_factor(income, '-Inf' = 0 )) %>%
+  dplyr::select(-qk601)
 
 # select and recode mental health, fairness and attributional style
 ##MH
@@ -105,21 +106,21 @@ fair <- dfa %>%
 fair[fair < 0] <- NA
 fair[fair > 5] <- NA
 fair[fair == 5] <- 0 # encounter with unfair affairs? 1 = yes, 5 = no
+fair <- fair %>%
+  dplyr::mutate(fairsum = qn201+qn202+qn203+qn204+qn205+qn206+qn207+qn208) %>%
+  dplyr::select(fairsum)
 library(psych)
 
 # reliability of fairness scale
 psych::alpha(fair)
 
-# sum of fairness, add to MH
-MH$fairsum <- rowSums(fair)
-
 #migrant
 migr <- dfa %>%
   dplyr::select(qa3, qa4) %>% #moved when 3; moved when 12
   dplyr::mutate(migrant = qa3 + qa4) %>%
-  dplyr::mutate(migrant = recode(migrant, "1" = 1, "2" = 1, .default = -8))
-migr[migr == -8] <- NA
-
+  dplyr::mutate(migrant = recode(migrant, "1" = 1, "2" = 1, .default = 0)) %>%
+  dplyr::select(migrant)
+  
 #social support
 ##kin support
 sup_kin1 <- dfa %>%

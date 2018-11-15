@@ -48,47 +48,47 @@ library("dplyr")
 
 #set directory to the folder of analytic data
 data <- read.csv("sesMH.csv", header=T)     
-
 summary(data)
 ##NOTICE: over 10000 missing values for occupation coding and 1865 for income, thousands missing for attributional style and fairness
 data.complete <- data %>%     
-  dplyr::filter(complete.cases(data)) %>%  # only the complete cases (i.e., no NA in every row) 
-  dplyr::select(-fid, -pid, -gender, -qa1age) # drop the columns for later analysis
-
+  dplyr::filter(complete.cases(data)) %>% # only the complete cases (i.e., no NA in every row) 
+  dplyr::mutate(kinsupport = sib + parent+ spouse + children + dep_c + qz204 + fc1,
+                nonkinsupport = sup_edu + sup_rel + sup_commu +  sup_social  +  sup_net+qg3+qg405) %>%
+  dplyr::select( educ, wordtest, mathtest, qg307isco, qg307isei, income, qa7_s_1, qm403, qm404, qk802,
+                 qq601, qq602, qq603, qq604,qq605,qq606,
+                 migrant, fairsum, kinsupport, nonkinsupport, pid, fid, qa1age, gender)
+summary(data.complete)
 # label for the nodes of network
 labels <- c("educ", "word", "math", "occu1", "occu2", "income", "pol",
-            "satis","confi", "happi", "depr", "fair", "attri1", "attri2", "attri3", "attri4", "attri5", "attri6", "attri7")
-##NOTICE: data.complete has 9419 obs
+            "satis","confi", "happi", "depressed", "nervous", "angry", "hopless", "hard", "meaningless", 
+            "migrant", "fair", "kinsup", "nonkinsup")
+            #"sk_sib", "sk_par", "sk_spou", "sk_c", "sk_dep", "sk_famhor", "sk_rela", 
+            #"sn_edu", "sn_rel", "sn_commu", "sn_social", "sn_net", "sn_emp", "sn_super")
+##NOTICE: data.complete has 10276 obs
 #generate partial correlation network of all the data
+data_all <- data.complete %>%
+  dplyr::select(-fid, -pid, -qa1age, -gender)
 groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
-                   rep("MH", 4), rep("otherMH", 8)))
-
-netPcor <- qgraph::qgraph(cor(data.complete), layout = "spring", 
+                   rep("MH", 9), rep("migrant", 1), rep("fair", 1), rep("social support", 2)))
+netPcor <- qgraph::qgraph(cor(data_all), layout = "spring", 
                           labels = labels, groups = groups, graph = "concentration")
 # export image
-jpeg(file = "all.jpeg")
-plot(netPcor)
-dev.off()
-
-# data without those variables that have too many missing values
-data.more <- data %>%
-  dplyr::select(fdepression, qm403, qm404, qk802, educ, wordtest, mathtest, qa7_s_1) %>%
-  dplyr::filter(complete.cases(data))
-summary(data.more)
+#jpeg(file = "all.jpeg")
+#plot(netPcor)
+#dev.off()
 
 # generate partial correlation network of male, 30-50
-data.male <- data %>%
-  dplyr::filter(complete.cases(data)) %>% 
+data.male <- data.complete %>%
   dplyr::filter(gender == 1) %>% # male
   dplyr::filter(qa1age >= 30 & qa1age <=50) %>% # age:30-50
   dplyr::group_by(fid) %>% 
   dplyr::filter(pid == max(pid)) %>%  # one each family
-  dplyr::select(-pid, -gender, -qa1age)  # drop the columns for later analysis
-data.male$fid <- NULL# drop the columns for later analysis 
+  dplyr::select(-pid, -gender, -qa1age)  # drop the columns for later analysis 
+data.male$fid <- NULL
 summary(data.male)
 
 groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
-                   rep("MH", 4), rep("otherMH", 8)))
+                   rep("MH", 9), rep("migrant", 1), rep("fair", 1), rep("social support", 2)))
 netPcor_m <- qgraph(cor(data.male), layout = "spring", 
                     labels = labels, groups = groups, graph = "concentration")
 
@@ -111,8 +111,7 @@ clustcoef <- clustcoef_auto(netPcor)
 cluster <- clusteringPlot(netPcor, signed = TRUE)
 
 # generate partial correlation network of female, 30-50
-data.female <- data %>%
-  dplyr::filter(complete.cases(data)) %>%
+data.female <- data.complete %>%
   dplyr:: filter(gender == 0) %>% # male
   dplyr::filter(qa1age >= 30 & qa1age <= 50) %>% # age:30-50
   dplyr::group_by(fid) %>% 
@@ -121,7 +120,7 @@ data.female <- data %>%
 data.female$fid <- NULL
 
 groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
-                   rep("MH", 4), rep("otherMH", 8)))
+                   rep("MH", 9), rep("migrant", 1), rep("fair", 1), rep("social support", 2)))
 netPcor <- qgraph(cor(data.female), layout = "spring", labels = labels,
                   groups = groups, graph = "concentration")
 
