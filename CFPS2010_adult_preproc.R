@@ -41,8 +41,8 @@ library("dplyr")
 library("tidyverse")
 
 #read data 
-dfa <- read.table("[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T) #adult 2010
-
+dfa <- read.table("data/[CFPS Public Data] 2010 Adult Data (ENG).tab", sep="\t",header=T) #adult 2010
+dff <- read.table("data/[CFPS Public Data] 2010 Family Data (ENG).tab", sep="\t",header=T) #family 2010
 ###### get related variables
 #ID information
 persinfo <- dfa %>%
@@ -50,8 +50,8 @@ persinfo <- dfa %>%
 
 #summarize personal informations
 summary(dfa$qa1age)  #age
-table(dfa$gender)    #gender: 0 =  ; 1 = .
-table(dfa$qa2)       #hukou: 1 = agriculture 3 = non-agriculture
+table(dfa$gender)    #gender: 0 = female; 1 = male.
+table(dfa$qa2)       #hukou: 1 = agriculture 3 = non-agriculture; other numbers = not appliable
 
 # Select and recode SES
 SES <- dfa %>%
@@ -78,19 +78,16 @@ SES <- SES %>%
   dplyr::ungroup()
 
 # recode income using log10, if income =0, recode it as 0 
-# hcp: plot the raw data using hist() or density() to have a look first.
-# hcp: using a new column to store log-transferred data, 
+# hcp: plot the raw data using hist() or density() to have a look first. 
 SES <- SES %>%
-  dplyr::mutate(qk601 = log10(qk601)) %>%
-  dplyr::mutate(qk601 = recode_factor(qk601, '-Inf' = 0 ))
+  dplyr::mutate(income = log10(qk601)) %>%
+  dplyr::mutate(income = recode_factor(income, '-Inf' = 0 ))
 
 # select and recode mental health, fairness and attributional style
 ##MH
 MH <- dfa %>%
-  dplyr::select(qm403, qm404, qk802, depression)
-MH[MH == -8] <- NA
-MH$qm403[MH$qm403 <0] <- NA  # hcp: add comments
-MH$qm404[MH$qm404 <0] <- NA  # hcp: add comments
+  dplyr::select(qm403, qm404, qk802, qq601, qq602, qq603, qq604, qq605, qq606)
+MH[MH < 0] <- NA # MH = -8/-2 not appliable
 summary(MH)
 
 # reliability of depression scale
@@ -101,12 +98,6 @@ depr[depr == -2 ] <- NA
 depr[depr == -1] <- NA
 summary(depr)
 psych::alpha(depr)
-depr <- depr %>%
-  dplyr::filter(complete.cases(depr))
-
-# hcp: why doing factor analysis here? the scree plot showed that one factor structure
-stats::factanal(depr, factors=2) 
-scree(depr) # hcp: add the package information?
 
 ##fairness
 fair <- dfa %>%
@@ -114,41 +105,102 @@ fair <- dfa %>%
 fair[fair < 0] <- NA
 fair[fair > 5] <- NA
 fair[fair == 5] <- 0 # encounter with unfair affairs? 1 = yes, 5 = no
-scree(fair)
-summary(fair)
 library(psych)
-fair  %>%
-  dplyr::filter(complete.cases(fair)) %>%
-  # factor analysis?
-  stats::factanal(fair, factors=4)
+
 # reliability of fairness scale
 psych::alpha(fair)
 
 # sum of fairness, add to MH
 MH$fairsum <- rowSums(fair)
 
+#migrant
+migr <- dfa %>%
+  dplyr::select(qa3, qa4) %>% #moved when 3; moved when 12
+  dplyr::mutate(migrant = qa3 + qa4) %>%
+  dplyr::mutate(migrant = recode(migrant, "1" = 1, "2" = 1, .default = -8))
+migr[migr == -8] <- NA
+
+#social support
+##kin support
+sup_kin1 <- dfa %>%
+  dplyr::select(fid, pid, qb304_a_1, qb304_a_2, qb304_a_3, qb304_a_4, qb304_a_5, qb304_a_6, qb304_a_7, qb304_a_8, qb304_a_9, qb304_a_10, qb304_a_11, qb304_a_12, qb304_a_13, qb304_a_14, qb304_a_15, #siblings alive
+                qb411_s_1, #father alive
+                qb511_s_1, #mother alive
+                qe1, #mariage status 1=Never married 2=Married 3=Cohabitation 4=Divorced 5=Widowed 
+                qf1_a_1,qf1_a_2, qf1_a_3, qf1_a_4, qf1_a_5, qf1_a_6, qf1_a_7, qf1_a_8, qf1_a_9, qf1_a_10, #children number
+                qm3, qm301, qm302, qm303, qm304, #dependence on children 1 or 0
+                qz204) %>% #family harmony 1-7 
+  dplyr::mutate(qb411_s_1 = recode(qb411_s_1, '-8' = 0, .default = 1),
+                qb511_s_1 = recode(qb511_s_1, '-8' = 0, .default = 1))
+
+sup_kin2 <- dff %>% #relatives visited in Spring festival
+  dplyr::select(fid, fc1)
+sup_kin2[sup_kin2 < 0] <- NA
+
+#join all social support, kin
+sup_kin <- sup_kin1 %>%
+  left_join(sup_kin2, sup_kin1, by = "fid")
+
+#replace NA with 0
+sup_kin[sup_kin < 0] <- 0
+        
+#recode kin support
+sup_kin <- sup_kin %>%
+  dplyr::mutate(sib = qb304_a_1+ qb304_a_2+ qb304_a_3 +qb304_a_4 + qb304_a_5 +  qb304_a_6 +  qb304_a_7 + qb304_a_8 + qb304_a_9 + qb304_a_10 + qb304_a_11 + qb304_a_12 + qb304_a_13 +  qb304_a_14 +  qb304_a_15) %>% #sib = number of siblings
+  dplyr::mutate(parent =  qb411_s_1 + qb511_s_1) %>% # parents alive
+  dplyr::mutate(spouse = recode(qe1, '2' = 1, .default = 0)) %>% # with spouse or not
+  dplyr::mutate(children = qf1_a_1 + qf1_a_2 + qf1_a_3 + qf1_a_4+qf1_a_5+ qf1_a_6+ qf1_a_7+ qf1_a_8+ qf1_a_9+ qf1_a_10) %>%
+  dplyr::mutate(dep_c1 = recode(qm3, '2' = 1, '4' = 1, .default = 0),
+                dep_c2 = recode(qm301, '2' = 1, '4' = 1, .default = 0),
+                dep_c3 = recode(qm302, '2' = 1, '4' = 1, .default = 0),
+                dep_c4 = recode(qm303, '2' = 1, '4' = 1, .default = 0),
+                dep_c5 = recode(qm304, '2' = 1, '4' = 1, .default = 0)) %>%
+  dplyr::mutate(dep_c = dep_c1 + dep_c2 + dep_c3 + dep_c4 + dep_c5) %>% #dependence on children, 2 = daughter, 4 = son
+  dplyr::select(sib, parent, spouse, children, dep_c, qz204, fc1)
+summary(sup_kin)
+
+##non-kin support
+sup_nonkin <- dfa %>%
+  dplyr::select(kt303_a_1, kt303_a_2, #informal education
+         kt408_a_1, kt408_a_2, #religious activity
+         kt407_a_1, kt407_a_2, #community service
+         kt406_a_1, kt406_a_2, #social activity
+         qa7_s_1, qa7_s_2, qa7_s_3,qa7_s_4, #networking organization
+         qg3, qg405)  %>% #employed & supervise other people
+  dplyr::mutate(sup_edu = kt303_a_1 + kt303_a_2, #recode
+         sup_rel = kt408_a_1 + kt408_a_2,
+         sup_commu = kt407_a_1 + kt407_a_2,
+         sup_social = kt406_a_1 + kt406_a_2,
+         qa7_s_1 = recode(qa7_s_1, '9' = 1, .default = 0),
+         qa7_s_2 = recode(qa7_s_2, '9' = 1, .default = 0),
+         qa7_s_3 = recode(qa7_s_3, '9' = 1, .default = 0),
+         qa7_s_4 = recode(qa7_s_4, '9' = 1, .default = 0),
+         qg3 = recode(qg3, '1' = 1, .default = 0),
+         qg405 = recode(qg405, '1' = 1, .default = 0)) %>%
+  dplyr::select(sup_edu, sup_rel, sup_commu, sup_social, qa7_s_1, qa7_s_2, qa7_s_3, qa7_s_4, qg3, qg405) %>% #select recoded
+  dplyr::mutate(sup_edu = recode(sup_edu, '-16' = 0, .default = 1), #recode rest
+                sup_rel = recode(sup_rel, '-16' = 0, .default = 1),
+                sup_commu = recode(sup_commu, '-16' = 0, .default = 1),
+                sup_social = recode(sup_social, '-16' = 0, .default = 1),
+                sup_net = qa7_s_1 + qa7_s_2 + qa7_s_3 + qa7_s_4) %>%
+  dplyr::select(sup_edu, sup_rel, sup_commu, sup_social, sup_net, qg3, qg405)
+
+
 ##attribute
-attri <- dfa %>% 
-  dplyr::select(qn501, qn502, qn503, qn504, qn505, qn506, qn507)  # 1-4, strongly disagree - strongly agree
-summary(attri)
+#attri <- dfa %>% 
+#  dplyr::select(qn501, qn502, qn503, qn504, qn505, qn506, qn507)  # 1-4, strongly disagree - strongly agree
+#summary(attri)
 
 ### recode attribute 1-4= strongly diagree, disagree, agree, strongly agree, 5=not agree not disagree, 6=i don't know, -8=missing value
-attri <- attri %>%
-  dplyr::mutate(qn501 = recode(qn501, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
-                qn502 = recode(qn502, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
-                qn503 = recode(qn503, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
-                qn504 = recode(qn504, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
-                qn505 = recode(qn505, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
-                qn506 = recode(qn506, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
-                qn507 = recode(qn507, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8))
-attri  %>%
-  dplyr::filter(complete.cases(attri)) %>%
-  # factor analysis?
-  stats::factanal(attri, factors=2) 
-# reliability of fairness scale
-psych::alpha(attri)
+#attri <- attri %>%
+# dplyr::mutate(qn501 = recode(qn501, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
+#                qn502 = recode(qn502, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
+#                qn503 = recode(qn503, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8), #               qn504 = recode(qn504, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
+#                qn505 = recode(qn505, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
+#                qn506 = recode(qn506, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8),
+#                qn507 = recode(qn507, '1' = -2, '2' = -1 ,'5' = 0, '3' = 1, '4' = 2, .default = -8))
 
 # combine all the related data
-all <- base::cbind(persinfo, SES, MH, attri)
+all <- base::cbind(persinfo, SES, MH, migr, fair, sup_kin, sup_nonkin)
 # write the table
 write.csv(all, file = "sesMH.csv", row.names = FALSE)
