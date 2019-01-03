@@ -6,6 +6,7 @@
 # HCP         18-10-11         Add code to remove the rows with NA and suggestion for coding
 # Cai, Y-Q    18-10-20         Divide by gender
 # Cai, Y-Q    18-10-24         Change dimension of depr and fair
+# Cai, Y-Q    19-01-03         Change into intergenerational transmission
 ###### input######
 #sesMH.csv
 #
@@ -70,9 +71,12 @@ adls <- adalasso.net(MHtrans)
 network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
 lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
 
+# Centrality
+centrality <- centrality_auto(netPcor)
+nc <- centrality$node.centrality
+ebc <- centrality$edge.betweenness.centrality
+central <- centralityPlot(netPcor)
 
-
-
-
-
-
+#cluster
+clustcoef <- clustcoef_auto(netPcor)
+cluster <- clusteringPlot(netPcor, signed = TRUE)
