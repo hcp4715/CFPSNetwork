@@ -47,5 +47,32 @@ library("dplyr")
 
 
 #set directory to the folder of analytic data
-data <- read.csv("sesMH.csv", header=T)     
+data <- read.csv("sesMHc.csv", header=T)     
 summary(data)
+
+#network of father mental health, mother mental health and chidlren mental health
+##data extraction
+MHtrans <- data %>%
+  dplyr::select(wn401, wn402, wn403, wn404, wn405, wn406, wm302, wm303, wz201, wz207,  # child: depression x6,  happiness, confidence in future, observation-cognitive, observation-intelligence
+         qm403f, qm404f, qk802f, qq601f, qq602f, qq603f, qq604f, qq605f, qq606f, wordtestf, mathtestf, #father: happiness, life satisfaction, confidence in future, depression X6, cognition
+         qm403m, qm404m, qk802m, qq601m, qq602m, qq603m, qq604m, qq605m, qq606m, wordtestm, mathtestm) #mother: happiness, life satisfaction, confidence in future, depression X6, cognition
+MHtrans <- drop_na(MHtrans)
+#partial correlation
+labels <- c("depressed", "nervous", "angry", "hopless", "hard", "meaningless","happi", "confi", "cogc1", "cogc2",
+            "satisf","confif", "happif", "depressedf", "nervousf", "angryf", "hoplessf", "hardf", "meaninglessf", "wordf", "mathf",
+            "satism","confim", "happim", "depressedm", "nervousm", "angrym", "hoplessm", "hardm", "meaninglessm", "wordm", "mathm")
+groups <- factor(c(rep("children", 10), rep("father", 11), rep("mother", 11)))
+netPcor <- qgraph::qgraph(cor(MHtrans), layout = "spring", 
+                          labels = labels, groups = groups, graph = "concentration")
+
+#lasso
+adls <- adalasso.net(MHtrans) 
+network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
+lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
+
+
+
+
+
+
+
