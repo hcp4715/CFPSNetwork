@@ -1,4 +1,4 @@
-################## Preprocessing CFPS adult data ##############################
+################## Preprocessing CFPS 2010 adult preproc ##############################
 # 
 # Author      Date(yy-mm-dd)   Change History
 #==========================================
