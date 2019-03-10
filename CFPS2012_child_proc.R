@@ -1,4 +1,4 @@
-################## Processing CFPS data of SES and mental health ##############################
+################## Processing CFPS 2012 child proc ##############################
 # 
 # Author      Date(yy-mm-dd)   Change History
 #==========================================
