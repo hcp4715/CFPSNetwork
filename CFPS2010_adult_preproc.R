@@ -59,7 +59,10 @@ SES <- dfa %>%
   dplyr::mutate(qa7_s_1 = recode_factor(qa7_s_1, '1' = 1, .default = 0)) #leave only communist members
 SES[SES == -8] <- NA #missing values
 summary(SES) # check SES
-
+cor.test(dfa$edu, dfa$wordtest, method = "pearson")
+library(ggplot2)
+p <- ggplot(dfa,aes(x=edu,y=wordtest)) + geom_point(shape=19) + xlab("dfa$edu") + ylab("dfa$wordtest") + geom_smooth(method = loess)
+p
 ####### political captial #######
 # set qa7_s_1 = 1 if any family member is a communist party member, else = 0
 pCap <- SES %>%

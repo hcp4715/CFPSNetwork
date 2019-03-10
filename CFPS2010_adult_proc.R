@@ -49,9 +49,11 @@ library("dplyr")
 #set directory to the folder of analytic data
 data <- read.csv("sesMH.csv", header=T)     
 summary(data)
+
+
 ##NOTICE: over 10000 missing values for occupation coding and 1865 for income, thousands missing for attributional style and fairness
 data.complete <- data %>%     
-  dplyr::filter(complete.cases(data)) %>% # only the complete cases (i.e., no NA in every row) 
+  dplyr::filter(complete.cases(data)) #%>% # only the complete cases (i.e., no NA in every row) 
   dplyr::mutate(kinsupport = sib + parent+ spouse + children + dep_c + qz204 + fc1,
                 nonkinsupport = sup_edu + sup_rel + sup_commu +  sup_social  +  sup_net+qg3+qg405) %>%
   dplyr::select( educ, wordtest, mathtest, qg307isco, qg307isei, income, qa7_s_1, qm403, qm404, qk802,
@@ -59,23 +61,24 @@ data.complete <- data %>%
                  migrant, fairsum, kinsupport, nonkinsupport, pid, fid, qa1age, gender)
 summary(data.complete)
 # label for the nodes of network
-labels <- c("educ", "word", "math", "occu1", "occu2", "income", "pol",
+#labels <- c("educ", "word", "math", "occu1", "occu2", "income", "pol",
             "satis","confi", "happi", "depressed", "nervous", "angry", "hopless", "hard", "meaningless", 
             "migrant", "fair", "kinsup", "nonkinsup")
             #"sk_sib", "sk_par", "sk_spou", "sk_c", "sk_dep", "sk_famhor", "sk_rela", 
             #"sn_edu", "sn_rel", "sn_commu", "sn_social", "sn_net", "sn_emp", "sn_super")
 ##NOTICE: data.complete has 10276 obs
 #generate partial correlation network of all the data
-data_all <- data.complete %>%
-  dplyr::select(-fid, -pid, -qa1age, -gender)
-groups <- factor(c(rep("hCap", 3), rep("mCap", 3), rep("pCap", 1), 
-                   rep("MH", 9), rep("migrant", 1), rep("fair", 1), rep("social support", 2)))
-netPcor <- qgraph::qgraph(cor(data_all), layout = "spring", 
+mentalhealth <- data %>%
+  dplyr::filter(complete.cases(data)) %>%
+  dplyr::select(qm403, qm404, qk802, qq601, qq602, qq603, qq604, qq605, qq606) 
+labels <- c("satis","confi", "happi", "depressed", "nervous", "angry", "hopless", "hard", "meaningless")
+groups <- factor(c(rep("others", 3), rep("depression", 6)))
+netPcor <- qgraph::qgraph(cor(mentalhealth), layout = "spring", 
                           labels = labels, groups = groups, graph = "concentration")
 # export image
-#jpeg(file = "all.jpeg")
-#plot(netPcor)
-#dev.off()
+jpeg(file = "all.jpeg")
+plot(netPcor)
+dev.off()
 
 # generate partial correlation network of male, 30-50
 data.male <- data.complete %>%
@@ -94,11 +97,13 @@ netPcor_m <- qgraph(cor(data.male), layout = "spring",
 
 #LASSO-male
 set.seed(100)
-adls <- adalasso.net(data.male) 
+adls <- adalasso.net(mentalhealth) 
 network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
 lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
 
 
+
+qgraph::smallworldness(lasso)
 # Centrality
 centrality <- centrality_auto(netPcor)
 nc <- centrality$node.centrality
@@ -126,9 +131,9 @@ netPcor <- qgraph(cor(data.female), layout = "spring", labels = labels,
 
 #LASSO-female
 set.seed(100)
-adls <- adalasso.net(data.female) 
+adls <- adalasso.net(mentalhealth) 
 network <- as.matrix(forceSymmetric(adls$pcor.adalasso)) 
-lasso <- qgraph(network, layout = "spring", labels = labels, groups = groups)
+lasso <- qgraph(mentalhealth, layout = "spring", labels = labels, groups = groups)
 
 # Centrality
 centrality <- centrality_auto(netPcor)
