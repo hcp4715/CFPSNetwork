@@ -1,4 +1,4 @@
-################## Preprocessing CFPS child data ##############################
+################## Preprocessing CFPS child data -- extract same child ##############################
 # 
 # Author      Date(yy-mm-dd)   Change History
 #==========================================
