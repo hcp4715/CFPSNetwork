@@ -1,4 +1,4 @@
-################## Preprocessing CFPS 2010 child data ##############################
+################## Preprocessing CFPS 2010 child preproc ##############################
 # 
 # Author      Date(yy-mm-dd)   Change History
 #==========================================
