@@ -1,0 +1,43 @@
+---
+title: "Data2014"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    code_folding: 'hide'
+    self_contained: true
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+    latex_engine: xelatex
+---
+
+Here, we're just setting a few options.
+
+```{r setup}
+knitr::opts_chunk$set(
+  warning = TRUE, # show warnings during codebook generation
+  message = TRUE, # show messages during codebook generation
+  error = TRUE, # do not interrupt codebook generation in case of errors,
+                # usually better for debugging
+  echo = TRUE  # show R code
+)
+ggplot2::theme_set(ggplot2::theme_bw())
+pander::panderOptions("table.split.table", Inf)
+```
+
+Now, we're preparing our data for the codebook.
+
+```{r prepare_codebook}
+install.packages("codebook")
+library(codebook)
+codebook_data <- read.csv("/Users/apple/Desktop/大三下/CFPSNetwork/data2014.csv", header = T)
+```
+
+
+Create codebook
+
+```{r codebook}
+codebook(codebook_data)
+```
