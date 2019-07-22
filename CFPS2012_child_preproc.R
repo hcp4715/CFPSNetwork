@@ -37,9 +37,10 @@ library("dplyr")
 library("tidyverse")
 
 #read data
-dfc2 <- read.csv("data/2012child.csv", header=T)
-dfa2 <- read.csv("data/2012adult.csv", header=T)
-dff2 <- read.csv("data/2012family.csv", header=T)
+dfc2 <- read.csv("data/csv/2012child.csv", header=T)
+dfa2 <- read.csv("data/csv/2012adult.csv", header=T)
+dff2 <- read.csv("data/csv/2012family.csv", header=T)
+dffr2 <- read.csv("data/csv/2012familyroster.csv", header = T)
 data2010 <- read.csv("data2010.csv", header=T)
 
 #######################children
@@ -52,13 +53,13 @@ child2_c <- child2_c %>%
                 #wm101, wm102, wm103, wm104, wm105, wm106, wm107, wm108, wm110, wm111, wm112,wm113, wm114, #esteem (350NA and NA in adult)
                 kz207_b_2, kz201_b_2, # intelligence, cognitive
                 #wm201, wm202, wm203, wm204, wm205, wm206, wm207, wm208, wm209, wm210, wm211, wm211, wm212, wm213, wm214, #parent-child relationship (too many NAs)
-                cfps2012_age, fid12, wa4, pid) #personal information
+                cfps2012_age, fid12, wa4, pid, gender2) #personal informatio
 child2_c[child2_c< 0] <- NA
 summary(child2_c)
-names(child2_c)[1:26] <- c("deprc2_1","deprc2_2","deprc2_3","deprc2_4","deprc2_5","deprc2_6","deprc2_7","deprc2_8","deprc2_9","deprc2_10",
+names(child2_c)[1:27] <- c("deprc2_1","deprc2_2","deprc2_3","deprc2_4","deprc2_5","deprc2_6","deprc2_7","deprc2_8","deprc2_9","deprc2_10",
                               "deprc2_11", "deprc2_12","deprc2_13","deprc2_14","deprc2_15","deprc2_16","deprc2_17","deprc2_18","deprc2_19","deprc2_20",
                               "intellc2", "cogc2",
-                              "agec2", "fid", "hukouc2", "pid")
+                              "agec2", "fid", "hukouc2", "pid", "gender")
 
 #chose the same participants in adult questionnaire as 2010
 child2_a <- subset(dfa2, pid %in% data2010$pid)
@@ -66,13 +67,13 @@ child2_a <- child2_a %>%
   dplyr::select(qq6011, qq6012, qq6013,qq6014,qq6015,qq6016,qq6017,qq6018,qq6019,
                 qq60110,qq60111,qq60112, qq60113,qq60114,qq60115,qq60116,qq60117,qq60118,qq60119,qq60120, #CES
                 qz207, qz201, #intelligence, cognitve
-                cfps2012_age, fid12, qa301, pid)
+                cfps2012_age, fid12, qa301, pid, cfps2012_gender)
 child2_a[child2_a < 0] <- NA
 summary(child2_a)
-names(child2_a)[1:26] <- c("deprc2_1","deprc2_2","deprc2_3","deprc2_4","deprc2_5","deprc2_6","deprc2_7","deprc2_8","deprc2_9","deprc2_10",
+names(child2_a)[1:27] <- c("deprc2_1","deprc2_2","deprc2_3","deprc2_4","deprc2_5","deprc2_6","deprc2_7","deprc2_8","deprc2_9","deprc2_10",
                               "deprc2_11", "deprc2_12","deprc2_13","deprc2_14","deprc2_15","deprc2_16","deprc2_17","deprc2_18","deprc2_19","deprc2_20",
                               "intellc2", "cogc2",
-                              "agec2", "fid", "hukouc2", "pid")
+                              "agec2", "fid", "hukouc2", "pid", "gender")
 child2 <- rbind(child2_c, child2_a)
 str(child2)
 #recode depression 
@@ -86,7 +87,6 @@ child2 <- child2 %>%
 
 #adult related variables
 ##father
-
 dataf2012 <- subset(dfa2, pid %in% data2010$pid_f)
 dataf2012 <- dataf2012 %>%
   dplyr::select(edu2012, income_adj, qn401_s_1, qn8011, qn8012, #education 1-8, income, politics, subjective ses
@@ -160,10 +160,19 @@ summary(datafam2012)
 names(datafam2012)[1:4] <- c("incomefam2","savingfam2", "sizefam2", 
                              "fid")
 
+#familyroster: extract data "still live in the household"
+summary(dffr2)
+datafamR2012 <- subset(dffr2, pid %in% data2010$pid)
+datafamR2012 <- datafamR2012 %>%
+  dplyr::select(TB6_A12_p, pid)
+names(datafamR2012)[1:2] <- c("left2", "pid")
+
+
 #merge all relevant variable together
 datap2012 <- merge(dataf2012, datam2012, by = "fid")
 datap_fam2012 <- merge(datap2012, datafam2012, by= "fid")
-data2012 <- merge(datap_fam2012, child2, by="fid")
+datap_fam_c2012 <- merge(datap_fam2012, child2, by="fid")
+data2012 <- merge(datap_fam_c2012, datafamR2012, by= "pid")
 str(data2012)
 
 # write table

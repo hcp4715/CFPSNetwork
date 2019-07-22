@@ -37,10 +37,9 @@ library("dplyr")
 library("tidyverse")
 
 #read data
-dfc0 <- read.csv("data/2010child.csv", header=T)
-dfa0 <- read.csv("data/2010adult.csv", header=T)
-dff0 <- read.csv("data/2010family.csv", header=T)
-child_per <- read.csv("child_per.csv", header=T)
+dfc0 <- read.csv("data/csv/2010child.csv", header=T)
+dfa0 <- read.csv("data/csv/2010adult.csv", header=T)
+dff0 <- read.csv("data/csv/2010family.csv", header=T)
 ####################children
 #select children from 2010 children
 c0 <- dfc0 %>%

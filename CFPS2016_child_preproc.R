@@ -37,9 +37,10 @@ library("dplyr")
 library("tidyverse")
 
 #read data
-dfc6 <- read.csv("data/2016child.csv", header=T)
-dfa6 <- read.csv("data/2016adult.csv", header=T)
-dff6 <- read.csv("data/2016family.csv", header=T)
+dfc6 <- read.csv("data/csv/2016child.csv", header=T)
+dfa6 <- read.csv("data/csv/2016adult.csv", header=T)
+dff6 <- read.csv("data/csv/2016family.csv", header=T)
+dffr6 <- read.csv("data/csv/2016familyroster.csv", header = T)
 data2014 <- read.csv("data2014.csv", header=T)
 
 #child related variables
@@ -95,7 +96,7 @@ dataf2016 <- dataf2016 %>%
 dataf2016[dataf2016 < 0] <- NA
 summary(dataf2016)
 incomef <- dataf2016 %>%
-  select(incomeb_imp, incomea, incomeb)
+  dplyr::select(incomeb_imp, incomea, incomeb)
 incomef$sumf <- rowSums(incomef, na.rm = TRUE)
 dataf2016_income <- cbind(dataf2016, incomef$sum)
 dataf2016 <- dataf2016_income %>% 
@@ -127,7 +128,7 @@ datam2016 <- datam2016 %>%
 datam2016[datam2016 < 0] <- NA
 summary(datam2016)
 incomem <- datam2016 %>%
-  select(incomeb_imp, incomea, incomeb)
+  dplyr::select(incomeb_imp, incomea, incomeb)
 incomem$sum <- rowSums(incomem, na.rm = TRUE)
 datam2016_income <- cbind(datam2016, incomem$sum)
 datam2016 <- datam2016_income %>% 
@@ -158,10 +159,19 @@ summary(datafam2016)
 names(datafam2016)[1:4] <- c("incomefam6","savingfam6", "sizefam6", 
                              "fid")
 
+#family roster: extract variable "pid still live in the household"
+summary(dffr6)
+datafamR2016 <- subset(dffr6, pid %in% data2012$pid)
+datafamR2016 <- datafamR2016 %>%
+  dplyr::select(tb6_a16_p, pid)
+names(datafamR2016)[1:2] <- c("left6","pid")
+
+
 #merge all relevant variable together
-datap2016 <- merge.data.frame(dataf2016, datam2016, by = "fid")
-datap_fam2016 <- merge.data.frame(datap2016, datafam2016, by= "fid")
-data2016 <- merge(datap_fam2016, datac2016, by="fid")
+datap2016 <- merge(dataf2016, datam2016, by = "fid")
+datap_fam2016 <- merge(datap2016, datafam2016, by= "fid")
+datap_fam_c2016 <- merge(datap_fam2016, datac2016, by="fid")
+data2016 <- merge(datap_fam_c2016, datafamR2016, by = "pid")
 summary(data2016)
 # write table
 write.csv(data2016, file = "data2016.csv", row.names = FALSE)
